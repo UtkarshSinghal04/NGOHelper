@@ -114,7 +114,7 @@ npm start
 
 ### Admin Access
 - **Username**: admin
-- **Password**: admin123
+- **Password**: #utkarsh*123
 
 ## Project Structure
 

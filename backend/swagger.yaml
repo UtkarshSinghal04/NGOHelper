@@ -78,7 +78,7 @@ paths:
                 password:
                   type: string
                   minLength: 6
-                  example: "admin123"
+                  example: "#utkarsh*123"
       responses:
         '200':
           description: Login successful

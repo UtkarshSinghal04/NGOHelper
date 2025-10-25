@@ -68,7 +68,7 @@ RATE_LIMIT_MAX_REQUESTS=100
 ## Default Admin Credentials
 
 - **Username:** admin
-- **Password:** admin123
+- **Password:** #utkarsh*123
 
 ## Database Schema
 
@@ -124,7 +124,7 @@ NGO002,January,200,8,30000
 ```bash
 curl -X POST ${process.env.REACT_APP_API_URL}/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"#utkarsh*123"}'
 ```
 
 ### Submit Report
