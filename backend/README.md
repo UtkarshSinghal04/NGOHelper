@@ -122,14 +122,14 @@ NGO002,January,200,8,30000
 
 ### Login
 ```bash
-curl -X POST http://localhost:3001/api/auth/login \
+curl -X POST ${process.env.REACT_APP_API_URL}/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```
 
 ### Submit Report
 ```bash
-curl -X POST http://localhost:3001/api/report \
+curl -X POST ${process.env.REACT_APP_API_URL}/api/report \
   -H "Content-Type: application/json" \
   -d '{
     "ngoId":"NGO001",
@@ -142,13 +142,13 @@ curl -X POST http://localhost:3001/api/report \
 
 ### Upload CSV
 ```bash
-curl -X POST http://localhost:3001/api/reports/upload \
+curl -X POST ${process.env.REACT_APP_API_URL}/api/reports/upload \
   -F "csvFile=@reports.csv"
 ```
 
 ### Get Dashboard Data
 ```bash
-curl -X GET "http://localhost:3001/api/report/dashboard?month=January&year=2024" \
+curl -X GET "${process.env.REACT_APP_API_URL}/api/report/dashboard?month=January&year=2024" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 

@@ -19,13 +19,28 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+
+// --- UPDATED CORS CONFIGURATION ---
+// List of allowed domains
+const allowedOrigins = [
+  process.env.CORS_ORIGIN || 'http://localhost:3000', // Your local React
+  'https://ngo-helper-three.vercel.app'             // Your Vercel frontend
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    // or if the origin is in our allowed list
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('This request is blocked by CORS policy'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+}));
+// --- END OF UPDATE ---
 
 // Rate limiting
 const limiter = rateLimit({
