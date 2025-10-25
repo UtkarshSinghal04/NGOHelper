@@ -67,7 +67,7 @@ const BulkUpload = () => {
       const formData = new FormData();
       formData.append('csvFile', file);
 
-      const response = await fetch('${process.env.REACT_APP_API_URL}/api/reports/upload', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/reports/upload`, {
         method: 'POST',
         body: formData,
       });

@@ -52,7 +52,7 @@ const ReportSubmission = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('${process.env.REACT_APP_API_URL}/api/report', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
