@@ -167,6 +167,22 @@ NGO001,January,150,5,25000
 NGO002,January,200,8,30000
 ```
 
+## API Documentation 
+
+This project includes interactive API documentation built with Swagger.
+
+To view the documentation:
+
+#### 1. Navigate to the backend directory:
+```bash
+cd backend
+```
+#### 2. Run the Swagger command:
+```bash
+npm run swagger
+```
+Access the documentation in your browser at the URL provided in the terminal (e.g., http://localhost:3001/api-docs).
+
 ## Database Schema
 
 ### Users Table
@@ -205,4 +221,5 @@ For support and questions, please open an issue in the repository or contact the
 
 ---
 
+Website Link : https://ngo-helper-three.vercel.app/
 Happy Coding!
