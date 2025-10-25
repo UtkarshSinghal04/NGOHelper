@@ -107,8 +107,8 @@ npm start
 
 ### 5. Access the Application
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001
-- **Health Check**: http://localhost:3001/health
+- **Backend API**: ${process.env.REACT_APP_API_URL}
+- **Health Check**: ${process.env.REACT_APP_API_URL}/health
 
 ## Default Credentials
 

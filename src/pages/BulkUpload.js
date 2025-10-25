@@ -67,7 +67,7 @@ const BulkUpload = () => {
       const formData = new FormData();
       formData.append('csvFile', file);
 
-      const response = await fetch('http://localhost:3001/api/reports/upload', {
+      const response = await fetch('${process.env.REACT_APP_API_URL}/api/reports/upload', {
         method: 'POST',
         body: formData,
       });
@@ -98,7 +98,7 @@ const BulkUpload = () => {
   const pollJobStatus = async (jobId) => {
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/reports/job-status/${jobId}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/reports/job-status/${jobId}`);
         const result = await response.json();
 
         if (result.success && result.data) {

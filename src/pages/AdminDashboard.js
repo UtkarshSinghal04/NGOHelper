@@ -32,7 +32,7 @@ const AdminDashboard = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/report/dashboard?month=${selectedMonth}&year=${selectedYear}`,
+        `${process.env.REACT_APP_API_URL}/api/report/dashboard?month=${selectedMonth}&year=${selectedYear}`,
         {
           method: 'GET',
           headers: {

@@ -24,7 +24,7 @@ app.use(helmet());
 // List of allowed domains
 const allowedOrigins = [
   process.env.CORS_ORIGIN || 'http://localhost:3000', // Your local React
-  'https://ngo-helper-three.vercel.app'             // Your Vercel frontend
+  'https://ngo-helper-three.vercel.app'          // Your Vercel frontend
 ];
 
 app.use(cors({
