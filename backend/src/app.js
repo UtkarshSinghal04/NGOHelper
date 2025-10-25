@@ -72,6 +72,12 @@ app.use('/api/report', reportRoutes);
 app.use('/api/reports', uploadRoutes);
 app.use('/api/contacts', contactRoutes);
 
+res.cookie('token', token, {
+  httpOnly: true,
+  secure: true,     // needed for HTTPS (Vercel)
+  sameSite: 'None', // needed for cross-site cookies
+});
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
