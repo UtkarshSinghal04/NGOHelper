@@ -13,6 +13,13 @@ const login = async (req, res) => {
     const result = await authenticateUser(credentials);
     
     if (result.success) {
+      res.cookie('sessionToken', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // true in production, false for localhost
+        sameSite: 'none', // Required for cross-domain
+        path: '/',
+        maxAge: 3600000 // 1 hour (or match your token's expiration)
+      });
       res.status(200).json(result);
     } else {
       res.status(401).json(result);
