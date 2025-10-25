@@ -6,7 +6,8 @@ const app = require('./app');
 const { initializeDatabase, closeDatabase } = require('./config/database');
 const { createDefaultAdmin } = require('./services/authService');
 
-const PORT = process.env.PORT || 3001;
+// --- CHANGE 1: Parse the PORT to ensure it's an integer ---
+const PORT = parseInt(process.env.PORT || 3001);
 
 /**
  * Start the server
@@ -22,8 +23,12 @@ const startServer = async () => {
     console.log('Default admin user created');
 
     // Start server
-    app.listen(PORT, () => {
+    // --- CHANGE 2: Bind to '0.0.0.0' for containerized hosting ---
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 NGO Helper API server is running on port ${PORT}`);
+
+      // Note: These localhost links will only work on your local machine.
+      // In production, you'll use your public Railway URL.
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔐 Admin login: http://localhost:${PORT}/api/auth/login`);
       console.log(`📝 Report submission: http://localhost:${PORT}/api/report`);
