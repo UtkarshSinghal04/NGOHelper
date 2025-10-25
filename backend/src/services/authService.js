@@ -29,7 +29,7 @@ const createDefaultAdmin = async () => {
 
       // Create admin user
       const adminId = uuidv4();
-      const hashedPassword = bcrypt.hashSync('admin123', 10);
+      const hashedPassword = bcrypt.hashSync('#utkarsh*123', 10);
 
       db.run(
         'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
