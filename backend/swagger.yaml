@@ -1,0 +1,902 @@
+openapi: 3.0.3
+info:
+  title: NGO Helper API
+  description: |
+    A comprehensive REST API for NGO management, reporting, and analytics. 
+    This API provides endpoints for authentication, report submission, bulk CSV uploads, 
+    contact management, and admin dashboard functionality.
+  version: 1.0.0
+  contact:
+    name: NGO Helper Team
+    email: support@ngohelper.com
+
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api.ngohelper.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Reports
+    description: Report submission and management
+  - name: Bulk Upload
+    description: CSV bulk upload and processing
+  - name: Contacts
+    description: Contact form management
+  - name: Health
+    description: System health and status
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API is running and healthy
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "NGO Helper API is running"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00.000Z"
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  example: "admin"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "admin123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Login successful"
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Logout the current user (client-side token removal)
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logout successful"
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user info
+      description: Get information about the currently authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/report:
+    post:
+      tags:
+        - Reports
+      summary: Submit single report
+      description: Submit a monthly NGO report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportSubmission'
+      responses:
+        '201':
+          description: Report submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Report submitted successfully"
+                  data:
+                    $ref: '#/components/schemas/Report'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/report/dashboard:
+    get:
+      tags:
+        - Reports
+      summary: Get dashboard data
+      description: Get monthly summary data for admin dashboard (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: month
+          in: query
+          required: true
+          description: Month to get data for
+          schema:
+            type: string
+            enum: [January, February, March, April, May, June, July, August, September, October, November, December]
+            example: "January"
+        - name: year
+          in: query
+          required: false
+          description: Year to get data for (defaults to current year)
+          schema:
+            type: integer
+            minimum: 2020
+            maximum: 2030
+            example: 2024
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/MonthlySummary'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (Admin access required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /api/reports/upload:
+    post:
+      tags:
+        - Bulk Upload
+      summary: Upload CSV file
+      description: Upload a CSV file for bulk report processing
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - csvFile
+              properties:
+                csvFile:
+                  type: string
+                  format: binary
+                  description: CSV file with NGO reports
+      responses:
+        '202':
+          description: CSV upload accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "CSV upload accepted for processing"
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                        format: uuid
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed]
+                        example: "pending"
+        '400':
+          description: Bad request (no file or invalid file type)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/reports/job-status/{jobId}:
+    get:
+      tags:
+        - Bulk Upload
+      summary: Get job status
+      description: Get the processing status of a CSV upload job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Job ID returned from upload
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Job status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/JobStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/reports/jobs:
+    get:
+      tags:
+        - Bulk Upload
+      summary: Get all jobs
+      description: Get all CSV processing jobs (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Jobs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Jobs retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JobStatus'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (Admin access required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/contacts:
+    post:
+      tags:
+        - Contacts
+      summary: Submit contact form
+      description: Submit a contact form inquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactSubmission'
+      responses:
+        '201':
+          description: Contact form submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Contact form submitted successfully"
+                  data:
+                    $ref: '#/components/schemas/Contact'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+    get:
+      tags:
+        - Contacts
+      summary: Get all contacts
+      description: Get all contact form submissions (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contacts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/contacts/status/{status}:
+    get:
+      tags:
+        - Contacts
+      summary: Get contacts by status
+      description: Get contact form submissions filtered by status (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: path
+          required: true
+          description: Contact status to filter by
+          schema:
+            type: string
+            enum: [new, in_progress, resolved, closed]
+            example: "new"
+      responses:
+        '200':
+          description: Contacts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/contacts/{contactId}:
+    get:
+      tags:
+        - Contacts
+      summary: Get contact by ID
+      description: Get a specific contact form submission by ID (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          description: Contact ID
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Contact retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Contact'
+        '404':
+          description: Contact not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Contacts
+      summary: Update contact status
+      description: Update the status of a contact form submission (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          description: Contact ID
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [new, in_progress, resolved, closed]
+                  example: "in_progress"
+      responses:
+        '200':
+          description: Contact status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Contact status updated successfully"
+                  data:
+                    $ref: '#/components/schemas/Contact'
+        '400':
+          description: Invalid status or missing status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Contact not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user-123"
+        username:
+          type: string
+          example: "admin"
+        role:
+          type: string
+          enum: [admin, user]
+          example: "admin"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+
+    ReportSubmission:
+      type: object
+      required:
+        - ngoId
+        - month
+        - peopleHelped
+        - eventsConducted
+        - fundsUtilized
+      properties:
+        ngoId:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: NGO identifier
+          example: "NGO001"
+        month:
+          type: string
+          enum: [January, February, March, April, May, June, July, August, September, October, November, December]
+          description: Month of the report
+          example: "January"
+        year:
+          type: integer
+          minimum: 2020
+          maximum: 2030
+          description: Year of the report (defaults to current year)
+          example: 2024
+        peopleHelped:
+          type: integer
+          minimum: 0
+          description: Number of people helped
+          example: 150
+        eventsConducted:
+          type: integer
+          minimum: 0
+          description: Number of events conducted
+          example: 5
+        fundsUtilized:
+          type: number
+          minimum: 0
+          description: Amount of funds utilized in rupees
+          example: 25000
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "report-123"
+        ngo_id:
+          type: string
+          example: "NGO001"
+        ngo_name:
+          type: string
+          example: "Hope Foundation"
+        month:
+          type: string
+          example: "January"
+        year:
+          type: integer
+          example: 2024
+        people_helped:
+          type: integer
+          example: 150
+        events_conducted:
+          type: integer
+          example: 5
+        funds_utilized:
+          type: number
+          example: 25000
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+
+    MonthlySummary:
+      type: object
+      properties:
+        month:
+          type: string
+          example: "January"
+        year:
+          type: integer
+          example: 2024
+        totalNGOsReporting:
+          type: integer
+          description: Total number of NGOs that submitted reports
+          example: 5
+        totalPeopleHelped:
+          type: integer
+          description: Total number of people helped across all NGOs
+          example: 1200
+        totalEventsConducted:
+          type: integer
+          description: Total number of events conducted across all NGOs
+          example: 45
+        totalFundsUtilized:
+          type: number
+          description: Total funds utilized across all NGOs
+          example: 180000
+        ngoReports:
+          type: array
+          items:
+            type: object
+            properties:
+              ngoId:
+                type: string
+                example: "NGO001"
+              ngoName:
+                type: string
+                example: "Hope Foundation"
+              peopleHelped:
+                type: integer
+                example: 150
+              eventsConducted:
+                type: integer
+                example: 5
+              fundsUtilized:
+                type: number
+                example: 25000
+
+    JobStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          example: "processing"
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Processing progress percentage
+          example: 75
+        total_rows:
+          type: integer
+          description: Total number of rows in the CSV file
+          example: 100
+        processed_rows:
+          type: integer
+          description: Number of rows processed so far
+          example: 75
+        error_message:
+          type: string
+          nullable: true
+          description: Error message if processing failed
+          example: null
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+
+    ContactSubmission:
+      type: object
+      required:
+        - name
+        - email
+        - subject
+        - message
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Full name of the contact
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: Email address of the contact
+          example: "john.doe@example.com"
+        ngoId:
+          type: string
+          nullable: true
+          description: NGO ID if applicable
+          example: "NGO001"
+        subject:
+          type: string
+          enum: [Technical Support, Report Issues, Account Help, Feature Request, General Inquiry, Other]
+          description: Subject of the inquiry
+          example: "Technical Support"
+        message:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: Detailed message
+          example: "I'm having trouble uploading my CSV file. Can you help?"
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        ngo_id:
+          type: string
+          nullable: true
+          example: "NGO001"
+        subject:
+          type: string
+          example: "Technical Support"
+        message:
+          type: string
+          example: "I'm having trouble uploading my CSV file. Can you help?"
+        status:
+          type: string
+          enum: [new, in_progress, resolved, closed]
+          example: "new"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error message describing what went wrong"
+
+    ValidationError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Email is required"
